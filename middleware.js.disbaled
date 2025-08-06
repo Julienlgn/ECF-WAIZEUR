@@ -1,0 +1,11 @@
+import { NextResponse } from "next/server";
+
+export function middleware(request) {
+  // Middleware complètement désactivé pour le débogage
+  console.log("Middleware désactivé pour:", request.nextUrl.pathname);
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/dashboard/:path*", "/auth/:path*", "/premium/:path*"],
+};
