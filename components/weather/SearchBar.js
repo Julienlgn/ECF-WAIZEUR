@@ -155,12 +155,6 @@ export default function SearchBar({ onSearch }) {
           className="w-full px-4 py-3 pl-12 pr-4 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           autoComplete="off"
         />
-        <button
-          type="submit"
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-        >
-          Rechercher
-        </button>
         <svg
           className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400"
           fill="none"
@@ -180,7 +174,7 @@ export default function SearchBar({ onSearch }) {
       {showSuggestions && (
         <div
           ref={suggestionsRef}
-          className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+          className="w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
         >
           {isLoading ? (
             <div className="px-4 py-3 text-center text-gray-500">
@@ -236,6 +230,16 @@ export default function SearchBar({ onSearch }) {
           ) : null}
         </div>
       )}
+
+      {/* Bouton de recherche sous la barre */}
+      <div className="mt-3">
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium"
+        >
+          Rechercher
+        </button>
+      </div>
     </div>
   );
 }
