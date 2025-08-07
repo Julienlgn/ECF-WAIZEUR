@@ -3,7 +3,17 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { supabase } from "../../../../lib/supabase";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error(
+    "JWT_SECRET n'est pas défini dans les variables d'environnement"
+  );
+  return NextResponse.json(
+    { error: "Erreur de configuration du serveur" },
+    { status: 500 }
+  );
+}
 
 export async function POST(request) {
   try {
@@ -15,7 +25,10 @@ export async function POST(request) {
 
     // Validation des données
     if (!email || !password) {
-      console.error("Données manquantes:", { email: !!email, password: !!password });
+      console.error("Données manquantes:", {
+        email: !!email,
+        password: !!password,
+      });
       return NextResponse.json(
         { error: "Email et mot de passe requis" },
         { status: 400 }
@@ -49,8 +62,14 @@ export async function POST(request) {
 
     console.log("Utilisateur trouvé, ID:", user.id);
     console.log("Email utilisateur:", user.email);
-    console.log("Mot de passe en base:", user.password ? "Présent" : "Manquant");
-    console.log("Longueur du mot de passe en base:", user.password ? user.password.length : 0);
+    console.log(
+      "Mot de passe en base:",
+      user.password ? "Présent" : "Manquant"
+    );
+    console.log(
+      "Longueur du mot de passe en base:",
+      user.password ? user.password.length : 0
+    );
 
     if (!user.password) {
       console.error("Mot de passe manquant pour l'utilisateur:", user.id);
@@ -67,7 +86,10 @@ export async function POST(request) {
       user.password.startsWith("$2y$");
 
     console.log("Mot de passe hashé:", isHashed);
-    console.log("Début du mot de passe en base:", user.password.substring(0, 10) + "...");
+    console.log(
+      "Début du mot de passe en base:",
+      user.password.substring(0, 10) + "..."
+    );
 
     let isValidPassword = false;
 

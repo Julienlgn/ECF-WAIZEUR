@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AccountPage() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const isEditingRef = useRef(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -15,16 +16,56 @@ export default function AccountPage() {
   const [message, setMessage] = useState({ type: "", text: "" });
   const router = useRouter();
 
+  // Fonction pour activer le mode édition
+  const handleEditClick = useCallback(() => {
+    console.log(
+      "Activation du mode édition - isEditing avant:",
+      isEditingRef.current
+    );
+    isEditingRef.current = true;
+    setIsEditing(true);
+    console.log("Activation du mode édition - isEditing après:", true);
+  }, []);
+
+  // Fonction pour annuler l'édition
+  const handleCancelEdit = useCallback(() => {
+    console.log("Annulation du mode édition");
+    isEditingRef.current = false;
+    setIsEditing(false);
+    setFormData({
+      firstName: user?.firstName || user?.first_name || "",
+      lastName: user?.lastName || user?.last_name || "",
+      email: user?.email || "",
+    });
+  }, [user]);
+
   useEffect(() => {
+    console.log("useEffect triggered");
     // Récupérer les données utilisateur depuis localStorage
     const userData = localStorage.getItem("userData");
     if (userData) {
       const userInfo = JSON.parse(userData);
-      setUser(userInfo);
-      setFormData({
-        firstName: userInfo.firstName || userInfo.first_name || "",
-        lastName: userInfo.lastName || userInfo.last_name || "",
-        email: userInfo.email || "",
+      console.log("User data loaded:", userInfo);
+
+      // Éviter de mettre à jour si les données sont identiques
+      setUser((prevUser) => {
+        if (JSON.stringify(prevUser) === JSON.stringify(userInfo)) {
+          return prevUser;
+        }
+        return userInfo;
+      });
+
+      setFormData((prevFormData) => {
+        const newFormData = {
+          firstName: userInfo.firstName || userInfo.first_name || "",
+          lastName: userInfo.lastName || userInfo.last_name || "",
+          email: userInfo.email || "",
+        };
+
+        if (JSON.stringify(prevFormData) === JSON.stringify(newFormData)) {
+          return prevFormData;
+        }
+        return newFormData;
       });
     } else {
       // Rediriger vers la connexion si pas d'utilisateur
@@ -33,8 +74,14 @@ export default function AccountPage() {
     setIsLoading(false);
   }, [router]);
 
+  // Log quand isEditing change
+  useEffect(() => {
+    console.log("isEditing changed to:", isEditing);
+  }, [isEditing]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log("Changement de champ:", name, value);
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -156,6 +203,8 @@ export default function AccountPage() {
     return null;
   }
 
+  console.log("État actuel - isEditing:", isEditing, "isLoading:", isLoading);
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -203,7 +252,7 @@ export default function AccountPage() {
                           name="firstName"
                           value={formData.firstName}
                           onChange={handleChange}
-                          disabled={!isEditing}
+                          disabled={!isEditingRef.current}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                         />
                       </div>
@@ -216,7 +265,7 @@ export default function AccountPage() {
                           name="lastName"
                           value={formData.lastName}
                           onChange={handleChange}
-                          disabled={!isEditing}
+                          disabled={!isEditingRef.current}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                         />
                       </div>
@@ -230,16 +279,16 @@ export default function AccountPage() {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        disabled={!isEditing}
+                        disabled={!isEditingRef.current}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                       />
                     </div>
 
                     <div className="mt-6 flex space-x-3">
-                      {!isEditing ? (
+                      {!isEditingRef.current ? (
                         <button
                           type="button"
-                          onClick={() => setIsEditing(true)}
+                          onClick={handleEditClick}
                           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           Modifier
@@ -255,15 +304,7 @@ export default function AccountPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
-                              setIsEditing(false);
-                              setFormData({
-                                firstName:
-                                  user.firstName || user.first_name || "",
-                                lastName: user.lastName || user.last_name || "",
-                                email: user.email || "",
-                              });
-                            }}
+                            onClick={handleCancelEdit}
                             className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
                           >
                             Annuler

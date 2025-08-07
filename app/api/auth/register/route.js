@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { supabase } from '../../../../lib/supabase';
+import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { supabase } from "../../../../lib/supabase";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = 10;
 
 export async function POST(request) {
@@ -88,7 +88,9 @@ export async function POST(request) {
     console.log("Utilisateur créé avec succès, ID:", data.id);
 
     // Génération du token
-    const token = jwt.sign({ userId: data.id }, JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ userId: data.id }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     return NextResponse.json({
       user: {
@@ -102,9 +104,6 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("Erreur complète dans l'API register:", error);
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-} 
+}
