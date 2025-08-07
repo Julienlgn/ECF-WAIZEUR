@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import SearchBar from "../components/weather/SearchBar";
 
 export default function HomePage() {
   const [weatherData, setWeatherData] = useState(null);
@@ -16,17 +17,20 @@ export default function HomePage() {
     fetchWeatherData();
   }, []);
 
-  const fetchWeatherData = async () => {
+  const fetchWeatherData = async (city = DEFAULT_CITY) => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log("Recherche météo pour Beauvais");
+      // Extraire le nom de la ville si le format est "Ville, CodePostal"
+      const cityName = city.includes(",") ? city.split(",")[0].trim() : city;
+
+      console.log("Recherche météo pour:", cityName);
 
       // Essayer d'abord avec le nom de la ville seul
       let response = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
-          DEFAULT_CITY
+          cityName
         )}&appid=${API_KEY}&units=metric&lang=fr`
       );
 
@@ -35,7 +39,7 @@ export default function HomePage() {
         console.log("Première tentative échouée, essai avec France");
         response = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
-            DEFAULT_CITY
+            cityName
           )}, France&appid=${API_KEY}&units=metric&lang=fr`
         );
       }
@@ -127,22 +131,29 @@ export default function HomePage() {
       {/* Main Content */}
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h2 className="text-4xl font-bold text-gray-800 mb-4">
             Météo en temps réel
           </h2>
           <p className="text-xl text-gray-600 mb-8">
             Consultez la météo actuelle de {DEFAULT_CITY}
           </p>
-          <div className="bg-blue-50 rounded-lg p-6 max-w-2xl mx-auto">
-            <h3 className="text-lg font-semibold text-blue-800 mb-2">
-              🚀 Fonctionnalités Premium
-            </h3>
-            <p className="text-blue-700">
-              Créez un compte pour accéder à vos villes favorites, aux
-              prévisions sur 5 jours et plus encore !
-            </p>
-          </div>
+        </div>
+
+        {/* Barre de recherche */}
+        <div className="mb-8">
+          <SearchBar onSearch={fetchWeatherData} />
+        </div>
+
+        {/* Premium Features */}
+        <div className="bg-blue-50 rounded-lg p-6 max-w-2xl mx-auto mb-8">
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">
+            🚀 Fonctionnalités Premium
+          </h3>
+          <p className="text-blue-700">
+            Créez un compte pour accéder à vos villes favorites, aux prévisions
+            sur 5 jours et plus encore !
+          </p>
         </div>
 
         {/* Weather Card */}
@@ -161,90 +172,115 @@ export default function HomePage() {
           )}
 
           {weatherData && !loading && (
-            <div className="bg-white rounded-lg shadow-lg p-8">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-3xl font-bold text-gray-800">
-                    {weatherData.name}
-                  </h3>
-                  <p className="text-gray-600">{formatDate(weatherData.dt)}</p>
-                  <p className="text-gray-500">{formatTime(weatherData.dt)}</p>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center">
-                    <Image
-                      src={getWeatherIcon(weatherData.weather[0].icon)}
-                      alt={weatherData.weather[0].description}
-                      width={80}
-                      height={80}
-                      className="mr-4"
-                    />
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden relative">
+              {/* Image de fond */}
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src={getWeatherIcon(weatherData.weather[0].icon)}
+                  alt={weatherData.weather[0].description}
+                  fill
+                  className="object-cover opacity-60"
+                />
+              </div>
+
+              {/* Contenu principal */}
+              <div className="relative z-10 p-6">
+                <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 shadow-lg">
+                  <div className="flex items-center justify-between mb-6">
                     <div>
-                      <p className="text-4xl font-bold text-gray-800">
-                        {Math.round(weatherData.main.temp)}°C
+                      <h3 className="text-3xl font-bold text-gray-800">
+                        {weatherData.name}
+                      </h3>
+                      <p className="text-gray-600 font-semibold">
+                        {formatDate(weatherData.dt)}
                       </p>
-                      <p className="text-gray-600 capitalize">
-                        {weatherData.weather[0].description}
+                      <p className="text-gray-500 font-semibold">
+                        {formatTime(weatherData.dt)}
                       </p>
                     </div>
+                    <div className="text-right">
+                      <div className="flex items-center">
+                        <div className="mr-4">
+                          <img
+                            src={`https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`}
+                            alt={weatherData.weather[0].description}
+                            width={80}
+                            height={80}
+                            className="drop-shadow-lg"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-4xl font-bold text-gray-800">
+                            {Math.round(weatherData.main.temp)}°C
+                          </p>
+                          <p className="text-gray-600 capitalize font-semibold">
+                            {weatherData.weather[0].description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4 text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <Image
-                      src="/images/icon_humidity.png"
-                      alt="Humidité"
-                      width={24}
-                      height={24}
-                      className="mr-2"
-                    />
-                    <span className="text-sm font-medium text-gray-600">
-                      Humidité
-                    </span>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {weatherData.main.humidity}%
-                  </p>
-                </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <img
+                        src="/images/icon_humidity.png"
+                        alt="Humidité"
+                        className="w-6 h-6"
+                      />
+                      <div>
+                        <p className="text-sm text-gray-500 font-semibold">
+                          Humidité
+                        </p>
+                        <p className="font-bold text-gray-800">
+                          {weatherData.main.humidity}%
+                        </p>
+                      </div>
+                    </div>
 
-                <div className="bg-gray-50 rounded-lg p-4 text-center">
-                  <div className="flex items-center justify-center mb-2">
-                    <Image
-                      src="/images/icon_wind.png"
-                      alt="Vent"
-                      width={24}
-                      height={24}
-                      className="mr-2"
-                    />
-                    <span className="text-sm font-medium text-gray-600">
-                      Vent
-                    </span>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {Math.round(weatherData.wind.speed)} km/h
-                  </p>
-                </div>
-              </div>
+                    <div className="flex items-center space-x-2">
+                      <img
+                        src="/images/icon_wind.png"
+                        alt="Vent"
+                        className="w-6 h-6"
+                      />
+                      <div>
+                        <p className="text-sm text-gray-500 font-semibold">
+                          Vent
+                        </p>
+                        <p className="font-bold text-gray-800">
+                          {Math.round(weatherData.wind.speed)} km/h
+                        </p>
+                      </div>
+                    </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      Température ressentie
-                    </p>
-                    <p className="text-lg font-semibold text-gray-800">
-                      {Math.round(weatherData.main.feels_like)}°C
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-600">Min/Max</p>
-                    <p className="text-lg font-semibold text-gray-800">
-                      {Math.round(weatherData.main.temp_min)}°C /{" "}
-                      {Math.round(weatherData.main.temp_max)}°C
-                    </p>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 flex items-center justify-center">
+                        <span className="text-lg">🌡️</span>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 font-semibold">
+                          Ressenti
+                        </p>
+                        <p className="font-bold text-gray-800">
+                          {Math.round(weatherData.main.feels_like)}°C
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 flex items-center justify-center">
+                        <span className="text-lg">👁️</span>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 font-semibold">
+                          Visibilité
+                        </p>
+                        <p className="font-bold text-gray-800">
+                          {(weatherData.visibility / 1000).toFixed(1)} km
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
