@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import LogoutButton from "../../../components/common/LogoutButton";
 
 export default function AccountPage() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -22,8 +22,8 @@ export default function AccountPage() {
       const userInfo = JSON.parse(userData);
       setUser(userInfo);
       setFormData({
-        firstName: userInfo.firstName || "",
-        lastName: userInfo.lastName || "",
+        firstName: userInfo.firstName || userInfo.first_name || "",
+        lastName: userInfo.lastName || userInfo.last_name || "",
         email: userInfo.email || "",
       });
     } else {
@@ -83,6 +83,67 @@ export default function AccountPage() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true);
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage({ type: "", text: "" });
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("/api/user/delete", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Nettoyer le localStorage et les cookies
+        localStorage.removeItem("token");
+        localStorage.removeItem("userData");
+        document.cookie =
+          "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        document.cookie =
+          "userData=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+
+        setMessage({
+          type: "success",
+          text: "Compte supprimé avec succès. Redirection...",
+        });
+
+        // Rediriger vers la page d'accueil après 2 secondes
+        setTimeout(() => {
+          router.push("/");
+        }, 2000);
+      } else {
+        setMessage({
+          type: "error",
+          text: data.error || "Erreur lors de la suppression du compte",
+        });
+        setShowDeleteConfirm(false);
+      }
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: "Erreur lors de la suppression du compte",
+      });
+      setShowDeleteConfirm(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setMessage({ type: "", text: "" });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -101,14 +162,11 @@ export default function AccountPage() {
         <div className="bg-white shadow rounded-lg">
           {/* En-tête */}
           <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Mon Compte</h1>
-                <p className="text-gray-600">
-                  Gérez vos informations personnelles
-                </p>
-              </div>
-              <LogoutButton />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Mon Compte</h1>
+              <p className="text-gray-600">
+                Gérez vos informations personnelles
+              </p>
             </div>
           </div>
 
@@ -200,8 +258,9 @@ export default function AccountPage() {
                             onClick={() => {
                               setIsEditing(false);
                               setFormData({
-                                firstName: user.firstName || "",
-                                lastName: user.lastName || "",
+                                firstName:
+                                  user.firstName || user.first_name || "",
+                                lastName: user.lastName || user.last_name || "",
                                 email: user.email || "",
                               });
                             }}
@@ -213,6 +272,50 @@ export default function AccountPage() {
                       )}
                     </div>
                   </form>
+                </div>
+
+                {/* Section suppression de compte */}
+                <div className="bg-red-50 rounded-lg p-6 mt-6">
+                  <h2 className="text-lg font-semibold text-red-900 mb-4">
+                    Zone dangereuse
+                  </h2>
+                  <p className="text-red-700 mb-4">
+                    La suppression de votre compte est irréversible. Toutes vos
+                    données seront définitivement supprimées.
+                  </p>
+
+                  {showDeleteConfirm ? (
+                    <div className="bg-red-100 border border-red-300 rounded-md p-4 mb-4">
+                      <p className="text-red-800 font-medium mb-3">
+                        Êtes-vous sûr de vouloir supprimer votre compte ? Cette
+                        action est irréversible.
+                      </p>
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={handleDeleteAccount}
+                          disabled={isLoading}
+                          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+                        >
+                          {isLoading
+                            ? "Suppression..."
+                            : "Oui, supprimer mon compte"}
+                        </button>
+                        <button
+                          onClick={cancelDelete}
+                          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleDeleteAccount}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                      Supprimer mon compte
+                    </button>
+                  )}
                 </div>
               </div>
 

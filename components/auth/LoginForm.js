@@ -61,6 +61,8 @@ export default function LoginForm() {
           email: user.email,
           firstName: user.first_name,
           lastName: user.last_name,
+          first_name: user.first_name,
+          last_name: user.last_name,
           premium: user.premium,
         })
       );
@@ -74,6 +76,8 @@ export default function LoginForm() {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
+        first_name: user.first_name,
+        last_name: user.last_name,
         premium: user.premium,
       })}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
 

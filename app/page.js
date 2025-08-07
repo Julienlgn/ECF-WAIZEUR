@@ -10,7 +10,7 @@ export default function HomePage() {
   const [error, setError] = useState(null);
 
   const API_KEY = "d9ec316c2befc0f7909eccb409c4a7a1";
-  const DEFAULT_CITY = "Paris"; // Ville par défaut
+  const DEFAULT_CITY = "Beauvais"; // Ville par défaut
 
   useEffect(() => {
     fetchWeatherData();
@@ -21,17 +21,34 @@ export default function HomePage() {
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${DEFAULT_CITY}&appid=${API_KEY}&units=metric&lang=fr`
+      console.log("Recherche météo pour Beauvais");
+
+      // Essayer d'abord avec le nom de la ville seul
+      let response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
+          DEFAULT_CITY
+        )}&appid=${API_KEY}&units=metric&lang=fr`
       );
+
+      // Si ça ne marche pas, essayer avec ", France"
+      if (!response.ok) {
+        console.log("Première tentative échouée, essai avec France");
+        response = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
+            DEFAULT_CITY
+          )}, France&appid=${API_KEY}&units=metric&lang=fr`
+        );
+      }
 
       if (!response.ok) {
         throw new Error("Erreur lors de la récupération des données météo");
       }
 
       const weather = await response.json();
+      console.log("Données météo récupérées:", weather);
       setWeatherData(weather);
     } catch (error) {
+      console.error("Erreur météo:", error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -81,7 +98,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -108,7 +125,7 @@ export default function HomePage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-800 mb-4">

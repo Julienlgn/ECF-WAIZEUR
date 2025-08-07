@@ -41,40 +41,59 @@ export default function ForecastList({ forecast, getWeatherIcon }) {
         const minTemp = Math.min(...forecasts.map((f) => f.main.temp_min));
 
         return (
-          <div key={date} className="bg-white rounded-lg shadow-lg p-4">
-            <div className="text-center">
-              <h3 className="font-semibold text-gray-800 mb-2">
-                {formatDate(dayForecast.dt)}
-              </h3>
+          <div
+            key={date}
+            className="bg-white rounded-lg shadow-lg overflow-hidden relative"
+          >
+            {/* Image de fond */}
+            <div className="absolute inset-0 z-0">
+              <Image
+                src={getWeatherIcon(dayForecast.weather[0].icon)}
+                alt={dayForecast.weather[0].description}
+                fill
+                className="object-cover opacity-60"
+              />
+            </div>
 
-              <div className="flex justify-center mb-3">
-                <Image
-                  src={getWeatherIcon(dayForecast.weather[0].icon)}
-                  alt={dayForecast.weather[0].description}
-                  width={60}
-                  height={60}
-                />
-              </div>
+            {/* Contenu principal */}
+            <div className="relative z-10 p-4">
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                <div className="text-center">
+                  <h3 className="font-bold text-gray-800 mb-2">
+                    {formatDate(dayForecast.dt)}
+                  </h3>
 
-              <p className="text-sm text-gray-600 capitalize mb-2">
-                {dayForecast.weather[0].description}
-              </p>
+                  <div className="flex justify-center mb-3">
+                    <img
+                      src={`https://openweathermap.org/img/wn/${dayForecast.weather[0].icon}@2x.png`}
+                      alt={dayForecast.weather[0].description}
+                      width={60}
+                      height={60}
+                      className="drop-shadow-lg"
+                    />
+                  </div>
 
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-blue-600 font-semibold">
-                  {Math.round(maxTemp)}°C
-                </span>
-                <span className="text-gray-500">{Math.round(minTemp)}°C</span>
-              </div>
+                  <p className="text-2xl font-bold text-gray-800 mb-2">
+                    {Math.round(dayForecast.main.temp)}°C
+                  </p>
+                  <p className="text-sm text-gray-600 capitalize mb-3 font-semibold">
+                    {dayForecast.weather[0].description}
+                  </p>
 
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Humidité</span>
-                  <span>{dayForecast.main.humidity}%</span>
-                </div>
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Vent</span>
-                  <span>{Math.round(dayForecast.wind.speed)} km/h</span>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-gray-500 font-semibold">Min</p>
+                      <p className="font-bold text-gray-800">
+                        {Math.round(dayForecast.main.temp_min)}°C
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 font-semibold">Max</p>
+                      <p className="font-bold text-gray-800">
+                        {Math.round(dayForecast.main.temp_max)}°C
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

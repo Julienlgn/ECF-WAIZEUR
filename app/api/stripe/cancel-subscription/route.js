@@ -21,7 +21,7 @@ export async function POST(request) {
 
     // Annuler l'abonnement dans Stripe
     const subscription = await stripe.subscriptions.update(subscriptionId, {
-      cancel_at_period_end: true, // Annuler à la fin de la période de facturation
+      cancel_at_period_end: true,
     });
 
     // Mettre à jour le statut dans Supabase

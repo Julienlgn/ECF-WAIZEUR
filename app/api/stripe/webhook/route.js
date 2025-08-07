@@ -75,19 +75,26 @@ async function handleCheckoutSessionCompleted(session) {
   const userId = session.metadata?.userId;
   const customerId = session.customer;
 
+  console.log("Webhook: Session de checkout complétée", {
+    userId,
+    customerId,
+    sessionId: session.id,
+  });
+
   if (userId) {
-    // Mettre à jour le statut premium de l'utilisateur
     const { error } = await supabase
-      .from("users")
+      .from('users')
       .update({
-        is_premium: true,
+        premium: true,
         stripe_customer_id: customerId,
         premium_start_date: new Date().toISOString(),
       })
-      .eq("id", userId);
+      .eq('id', userId);
 
     if (error) {
-      console.error("Erreur lors de la mise à jour du statut premium:", error);
+      console.error('Erreur lors de la mise à jour du statut premium:', error);
+    } else {
+      console.log('Statut premium mis à jour pour l\'utilisateur:', userId);
     }
   }
 }
@@ -95,46 +102,21 @@ async function handleCheckoutSessionCompleted(session) {
 async function handleSubscriptionCreated(subscription) {
   const customerId = subscription.customer;
 
-  // Trouver l'utilisateur par customer_id
-  const { data: user, error } = await supabase
-    .from("users")
-    .select("id")
-    .eq("stripe_customer_id", customerId)
-    .single();
-
-  if (user && !error) {
-    await supabase
-      .from("users")
-      .update({
-        is_premium: true,
-        stripe_subscription_id: subscription.id,
-        premium_start_date: new Date().toISOString(),
-      })
-      .eq("id", user.id);
-  }
+  console.log("Webhook: Abonnement créé", {
+    customerId,
+    subscriptionId: subscription.id,
+  });
 }
 
 async function handleSubscriptionUpdated(subscription) {
   const customerId = subscription.customer;
   const status = subscription.status;
 
-  const { data: user, error } = await supabase
-    .from("users")
-    .select("id")
-    .eq("stripe_customer_id", customerId)
-    .single();
-
-  if (user && !error) {
-    const isPremium = status === "active" || status === "trialing";
-
-    await supabase
-      .from("users")
-      .update({
-        is_premium: isPremium,
-        subscription_status: status,
-      })
-      .eq("id", user.id);
-  }
+  console.log("Webhook: Abonnement mis à jour", {
+    customerId,
+    subscriptionId: subscription.id,
+    status,
+  });
 }
 
 async function handleSubscriptionDeleted(subscription) {
@@ -159,11 +141,9 @@ async function handleSubscriptionDeleted(subscription) {
 }
 
 async function handleInvoicePaymentSucceeded(invoice) {
-  // Gérer les paiements réussis
   console.log("Paiement réussi pour la facture:", invoice.id);
 }
 
 async function handleInvoicePaymentFailed(invoice) {
-  // Gérer les échecs de paiement
   console.log("Échec de paiement pour la facture:", invoice.id);
 }

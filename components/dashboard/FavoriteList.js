@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
+import Image from "next/image";
 
-export default function FavoriteList({ userId }) {
+export default function FavoriteList({ userId, getWeatherIcon }) {
   const [favorites, setFavorites] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -128,36 +129,94 @@ export default function FavoriteList({ userId }) {
       <h3 className="text-lg font-medium text-gray-900">
         Vos villes favorites ({favorites.length})
       </h3>
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {favorites.map((favorite) => (
           <div
             key={favorite.id}
-            className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between"
+            className="bg-white rounded-lg shadow-lg overflow-hidden relative"
           >
-            <div className="flex items-center space-x-3">
-              <svg
-                className="h-5 w-5 text-red-500"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                  clipRule="evenodd"
+            {/* Image de fond */}
+            {favorite.weather_data && getWeatherIcon && (
+              <div className="absolute inset-0 z-0">
+                <Image
+                  src={getWeatherIcon(favorite.weather_data.weather[0].icon)}
+                  alt={favorite.weather_data.weather[0].description}
+                  fill
+                  className="object-cover opacity-60"
                 />
-              </svg>
-              <span className="font-medium text-gray-900">{favorite.city}</span>
-              <span className="text-sm text-gray-500">
-                ajouté le{" "}
-                {new Date(favorite.created_at).toLocaleDateString("fr-FR")}
-              </span>
+              </div>
+            )}
+
+            {/* Contenu principal */}
+            <div className="relative z-10 p-4">
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="font-bold text-gray-800">{favorite.city}</h3>
+                    {favorite.weather_data && (
+                      <div className="flex items-center space-x-2 mt-1">
+                        <img
+                          src={`https://openweathermap.org/img/wn/${favorite.weather_data.weather[0].icon}@2x.png`}
+                          alt={favorite.weather_data.weather[0].description}
+                          width={40}
+                          height={40}
+                          className="drop-shadow-lg"
+                        />
+                        <div>
+                          <p className="text-lg font-bold text-gray-800">
+                            {Math.round(favorite.weather_data.main.temp)}°C
+                          </p>
+                          <p className="text-sm text-gray-600 capitalize font-semibold">
+                            {favorite.weather_data.weather[0].description}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => removeFavorite(favorite.city)}
+                    className="text-red-500 hover:text-red-700 transition-colors"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {favorite.weather_data && (
+                  <div className="text-xs text-gray-500 font-semibold">
+                    <p>
+                      Dernière mise à jour :{" "}
+                      {formatLastUpdate(favorite.weather_data.dt)}
+                    </p>
+                  </div>
+                )}
+
+                {!favorite.weather_data && (
+                  <div className="text-center">
+                    <p className="text-sm text-gray-500 mb-2 font-semibold">
+                      Aucune donnée météo disponible
+                    </p>
+                    <button
+                      onClick={() => onRefreshWeather(favorite.city)}
+                      className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors font-semibold"
+                    >
+                      Actualiser
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            <button
-              onClick={() => removeFavorite(favorite.city)}
-              className="text-red-600 hover:text-red-800 text-sm font-medium"
-            >
-              Supprimer
-            </button>
           </div>
         ))}
       </div>

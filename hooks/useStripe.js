@@ -9,6 +9,8 @@ export const useStripe = () => {
     setError(null);
 
     try {
+      console.log('Tentative de création de session avec:', { priceId, userId, email });
+
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: {
@@ -22,13 +24,28 @@ export const useStripe = () => {
       });
 
       const data = await response.json();
+      console.log('Réponse du serveur:', { status: response.status, data });
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de la création de la session');
+        throw new Error(data.error || `Erreur ${response.status}: ${response.statusText}`);
+      }
+
+      if (!data.sessionId) {
+        throw new Error('Session ID manquant dans la réponse');
+      }
+
+      // Vérifier que Stripe est configuré côté client
+      if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+        throw new Error('Clé publique Stripe non configurée');
       }
 
       // Rediriger vers Stripe Checkout
       const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+      
+      if (!stripe) {
+        throw new Error('Impossible de charger Stripe');
+      }
+
       const { error } = await stripe.redirectToCheckout({
         sessionId: data.sessionId,
       });
@@ -37,8 +54,8 @@ export const useStripe = () => {
         throw new Error(error.message);
       }
     } catch (err) {
+      console.error('Erreur détaillée:', err);
       setError(err.message);
-      console.error('Erreur lors de la création de la session de paiement:', err);
     } finally {
       setLoading(false);
     }

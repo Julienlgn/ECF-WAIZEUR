@@ -43,8 +43,8 @@ export default function FavoriteButton({
       return;
     }
 
-    // Vérifier la limite de 3 favoris
-    if (!isFavorite) {
+    // Vérifier la limite de 3 favoris seulement pour les utilisateurs non-premium
+    if (!isFavorite && !user.premium) {
       try {
         const { data: currentFavorites, error } = await supabase
           .from("favorites")
@@ -55,7 +55,7 @@ export default function FavoriteButton({
           console.error("Erreur lors de la vérification des favoris:", error);
         } else if (currentFavorites && currentFavorites.length >= 3) {
           alert(
-            "Vous avez atteint la limite de 3 villes favorites. Supprimez un favori pour en ajouter un nouveau."
+            "Vous avez atteint la limite de 3 villes favorites. Passez à Premium pour ajouter autant de favoris que vous voulez !"
           );
           return;
         }
@@ -113,7 +113,18 @@ export default function FavoriteButton({
       }
     } catch (error) {
       console.error("Erreur lors de la gestion des favoris:", error);
-      alert("Erreur lors de la gestion des favoris");
+
+      // Gérer l'erreur spécifique de limite de favoris
+      if (
+        error.message &&
+        error.message.includes("Limite de 3 favoris atteinte")
+      ) {
+        alert(
+          "Vous avez atteint la limite de 3 villes favorites. Passez à Premium pour ajouter autant de favoris que vous voulez !"
+        );
+      } else {
+        alert("Erreur lors de la gestion des favoris");
+      }
     } finally {
       setLoading(false);
     }
