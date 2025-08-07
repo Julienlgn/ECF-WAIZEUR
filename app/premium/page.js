@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "../../hooks/useAuth";
 import PremiumButton from "../../components/PremiumButton";
 import ProtectedRoute from "../../components/common/ProtectedRoute";
 
-export default function PremiumPage() {
+function PremiumPageContent() {
   const searchParams = useSearchParams();
   const { user, loading, isPremium } = useAuth();
 
@@ -31,6 +31,20 @@ export default function PremiumPage() {
         canceled={canceled}
       />
     </ProtectedRoute>
+  );
+}
+
+export default function PremiumPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        </div>
+      }
+    >
+      <PremiumPageContent />
+    </Suspense>
   );
 }
 
