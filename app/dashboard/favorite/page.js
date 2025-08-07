@@ -22,13 +22,14 @@ function FavoriteList({ userId }) {
       if (!response.ok) throw new Error("Météo non trouvée");
       const data = await response.json();
       return {
-        temperature: `${Math.round(data.main.temp)}°C`,
+        temperature: Math.round(data.main.temp),
         description: data.weather[0].description,
         icon: `https://openweathermap.org/img/wn/${data.weather[0].icon.replace(
           "n",
           "d"
         )}.png`,
         weatherCode: data.weather[0].icon,
+        timestamp: data.dt,
         fullData: data,
       };
     } catch (error) {
@@ -133,6 +134,20 @@ function FavoriteList({ userId }) {
     } catch (error) {
       console.error("Erreur lors de la suppression du favori:", error);
       alert("Erreur lors de la suppression du favori");
+    }
+  };
+
+  const refreshWeather = async (cityName) => {
+    try {
+      const weather = await getWeatherForCity(cityName);
+      if (weather) {
+        setWeatherData(prev => ({
+          ...prev,
+          [cityName]: weather
+        }));
+      }
+    } catch (error) {
+      console.error(`Erreur lors de l'actualisation pour ${cityName}:`, error);
     }
   };
 
@@ -250,7 +265,7 @@ function FavoriteList({ userId }) {
                           />
                           <div>
                             <p className="text-lg font-bold text-gray-800">
-                              {Math.round(weather.temperature)}°C
+                              {weather.temperature}°C
                             </p>
                             <p className="text-sm text-gray-600 capitalize font-semibold">
                               {weather.description}
