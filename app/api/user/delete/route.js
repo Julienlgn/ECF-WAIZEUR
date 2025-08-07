@@ -4,17 +4,16 @@ import { supabase } from "../../../../lib/supabase";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-if (!JWT_SECRET) {
-  console.error(
-    "JWT_SECRET n'est pas défini dans les variables d'environnement"
-  );
-  return NextResponse.json(
-    { error: "Erreur de configuration du serveur" },
-    { status: 500 }
-  );
-}
-
 export async function DELETE(request) {
+  if (!JWT_SECRET) {
+    console.error(
+      "JWT_SECRET n'est pas défini dans les variables d'environnement"
+    );
+    return NextResponse.json(
+      { error: "Erreur de configuration du serveur" },
+      { status: 500 }
+    );
+  }
   try {
     // Récupérer le token depuis les headers
     const authHeader = request.headers.get("authorization");

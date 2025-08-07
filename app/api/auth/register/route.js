@@ -7,6 +7,15 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = 10;
 
 export async function POST(request) {
+  if (!JWT_SECRET) {
+    console.error(
+      "JWT_SECRET n'est pas défini dans les variables d'environnement"
+    );
+    return NextResponse.json(
+      { error: "Erreur de configuration du serveur" },
+      { status: 500 }
+    );
+  }
   try {
     const { email, password, firstName, lastName } = await request.json();
 
