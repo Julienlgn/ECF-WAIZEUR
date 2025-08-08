@@ -5,6 +5,13 @@ import { supabase } from "../../../../lib/supabase";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// Debug: Afficher les variables d'environnement
+console.log("=== DEBUG ENVIRONMENT VARIABLES ===");
+console.log("NEXT_PUBLIC_SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL ? "Présent" : "Manquant");
+console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Présent" : "Manquant");
+console.log("JWT_SECRET:", process.env.JWT_SECRET ? "Présent" : "Manquant");
+console.log("===================================");
+
 export async function POST(request) {
   if (!JWT_SECRET) {
     console.error(
